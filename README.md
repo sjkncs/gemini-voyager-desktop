@@ -4,6 +4,9 @@
   <h3>🖥️ Electron 桌面版 · 全功能离线体验</h3>
 
   <p>
+    <a href="https://github.com/sjkncs/gemini-voyager-desktop/actions/workflows/build-desktop.yml"><img src="https://img.shields.io/github/actions/workflow/status/sjkncs/gemini-voyager-desktop/build-desktop.yml?style=flat-square&logo=githubactions&logoColor=white&label=CI" alt="CI"></a>
+    <a href="https://github.com/sjkncs/gemini-voyager-desktop/releases/latest"><img src="https://img.shields.io/github/v/release/sjkncs/gemini-voyager-desktop?style=flat-square&logo=github&label=Release" alt="Release"></a>
+    <img src="https://img.shields.io/github/downloads/sjkncs/gemini-voyager-desktop/total?style=flat-square&logo=github&label=Downloads" alt="Downloads">
     <img src="https://img.shields.io/badge/Electron-33+-47848F?style=flat-square&logo=electron&logoColor=white" alt="Electron">
     <img src="https://img.shields.io/badge/Windows-✓-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Windows">
     <img src="https://img.shields.io/badge/macOS-✓-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS">
@@ -49,6 +52,32 @@
 </table>
 
 > **License**: This project inherits the **GPLv3** license from the original Gemini Voyager project.
+
+---
+
+## 📥 Download / 下载
+
+<div align="center">
+  <a href="https://github.com/sjkncs/gemini-voyager-desktop/releases/latest">
+    <img src="https://img.shields.io/badge/Windows-NSIS_Installer-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Installer" height="36">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/sjkncs/gemini-voyager-desktop/releases/latest">
+    <img src="https://img.shields.io/badge/Windows-Portable_ZIP-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Portable" height="36">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/sjkncs/gemini-voyager-desktop/releases/latest">
+    <img src="https://img.shields.io/badge/macOS-DMG-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS DMG" height="36">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/sjkncs/gemini-voyager-desktop/releases/latest">
+    <img src="https://img.shields.io/badge/Linux-AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux AppImage" height="36">
+  </a>
+</div>
+
+<p align="center">
+  <sub>All builds are generated automatically via <a href="https://github.com/sjkncs/gemini-voyager-desktop/actions/workflows/build-desktop.yml">GitHub Actions CI</a>.</sub>
+</p>
 
 ---
 

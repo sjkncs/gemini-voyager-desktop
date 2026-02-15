@@ -1,0 +1,10 @@
+feat: Gemini Voyager Desktop Edition - Electron wrapper with full feature parity
+
+- Electron desktop app wrapping the original Gemini Voyager browser extension
+- Chrome API polyfills: storage.sync, tabs, permissions, identity, scripting
+- Custom website injection via voyager-ipc:// protocol bridge
+- Settings export/import via native file dialogs (replaces Chrome Sync)
+- MV3 to MV2 manifest auto-patching for Electron compatibility
+- Cross-platform build: Windows (NSIS/Portable), macOS (DMG), Linux (AppImage)
+- Organized docs: moved AI guides to docs/ai-guides/
+- New bilingual README with credits to original author Nagi-ovo
