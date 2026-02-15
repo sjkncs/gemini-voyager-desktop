@@ -1,0 +1,57 @@
+{
+  "name": "gemini-voyager-desktop",
+  "version": "1.2.4",
+  "description": "Gemini Voyager — Desktop Edition (Electron wrapper)",
+  "main": "main.js",
+  "author": "Nagi-ovo",
+  "license": "MIT",
+  "scripts": {
+    "prepare-ext": "node prepare-extension.js",
+    "start": "node prepare-extension.js && electron .",
+    "build:win": "node prepare-extension.js && electron-builder --win --x64",
+    "build:mac": "node prepare-extension.js && electron-builder --mac --universal",
+    "build:linux": "node prepare-extension.js && electron-builder --linux --x64"
+  },
+  "build": {
+    "appId": "com.nagi.gemini-voyager",
+    "productName": "Gemini Voyager",
+    "directories": {
+      "output": "../dist_electron"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "icon.png"
+    ],
+    "extraResources": [
+      {
+        "from": "extension",
+        "to": "extension",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "../src/assets/img/icon-128.png"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "../src/assets/img/icon-128.png"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "icon": "../src/assets/img/icon-128.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "dependencies": {
+    "electron-store": "^10.0.0"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  }
+}

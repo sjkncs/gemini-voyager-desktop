@@ -1,0 +1,93 @@
+name: '🐛 反馈缺陷 Bug Report'
+description: '反馈一个问题缺陷 | Report a bug'
+title: '[Bug] '
+labels: '🐛 Bug'
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### ⚠️ 项目维护状态 | Maintenance Status
+
+        **本项目目前处于低频维护模式。 | This project is currently in Low Maintenance mode.**
+
+        - 我们将优先处理带有测试代码的 Pull Request，而非 Issue。 | We prioritize Pull Requests with tests over Issues.
+        - 对于未提供清晰复现步骤或环境信息的非核心 Bug，可能会被直接关闭。 | Non-critical bugs without minimal reproduction steps may be closed directly.
+        - 维护者精力有限，回复可能会有显著延迟，请谅解。 | Please be patient as response times will be significantly delayed.
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: '⚠️ 前置检查 | Essential Checklist'
+      description: '请确认您已完成以下操作 | Please confirm you have done the following'
+      options:
+        - label: '我已在 Issue 中搜索过类似问题，确认这不是一个重复的问题 / I have searched existing issues'
+          required: true
+        - label: '我理解如果未提供清晰的复现步骤或环境信息，Issue 可能会被关闭 / I understand my issue may be closed if repro steps are missing'
+          required: true
+        - label: '我确认使用的是插件的最新版本 / I am using the latest version of the extension'
+          required: true
+  - type: dropdown
+    attributes:
+      label: '💻 系统环境 | Operating System'
+      options:
+        - Windows
+        - macOS
+        - Ubuntu
+        - Other Linux
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: '🌐 浏览器 | Browser'
+      description: 'Which browser are you using?'
+      options:
+        - Chrome
+        - Edge
+        - Safari
+        - Firefox
+        - Other
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: '📦 扩展版本 | Extension Version'
+      description: 'Which version of Gemini Voyager are you using? (e.g., 1.1.3)'
+      placeholder: '1.1.3'
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: '🐛 问题描述 | Bug Description'
+      description: 'A clear and concise description of the bug.'
+      placeholder: 'Describe what happened...'
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: '🚦 期望结果 | Expected Behavior'
+      description: 'A clear and concise description of what you expected to happen.'
+      placeholder: 'Describe what you expected...'
+  - type: textarea
+    attributes:
+      label: '📷 复现步骤 | Recurrence Steps'
+      description: 'Steps to reproduce the behavior.'
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+  - type: textarea
+    attributes:
+      label: '📸 截图 | Screenshots'
+      description: 'REQUIRED for UI issues. If we cannot see it, we will not fix it. / UI 问题必填。如果看不到问题，我们将不会修复。'
+      placeholder: 'Drag and drop images here or paste image URLs'
+  - type: textarea
+    attributes:
+      label: '📝 补充信息 | Additional Information'
+      description: 'If your problem needs further explanation, please add more information here.'
+      placeholder: 'Any additional context, error messages, or console logs...'
+  - type: checkboxes
+    attributes:
+      label: '💻 贡献意愿 | Contribution'
+      options:
+        - label: '我愿意为该问题贡献修复代码 / I am willing to contribute a fix for this bug'
+        - label: '💡 其他贡献者可评论 `/claim` 认领此 Issue / Other contributors can comment `/claim` to claim'

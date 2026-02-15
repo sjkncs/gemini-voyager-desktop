@@ -1,0 +1,229 @@
+name: Release
+run-name: >
+  ${{
+    (github.event_name == 'workflow_dispatch' && inputs.version && format('chore(release): v{0}', inputs.version)) ||
+    (github.event_name == 'workflow_dispatch' && !inputs.version && 'chore(release): auto-increment') ||
+    (startsWith(github.ref, 'refs/tags/') && format('Release {0}', github.ref_name)) ||
+    format('Release #{0}', github.run_number)
+  }}
+
+# 🚀 Release Workflow Guide
+# -------------------------
+# This workflow supports two modes of operation:
+#
+# 1. Manual Release (Recommended for "One-Click" Releases)
+#    - How: Go to "Actions" -> "Release" -> "Run workflow".
+#    - Input: Optional "Version" (e.g., 1.2.0). If left empty, it auto-increments the patch version.
+#    - What it does:
+#      1. Calculates the next version.
+#      2. Bumps version in package.json & manifest.json.
+#      3. Commits "chore(release): vX.Y.Z".
+#      4. Creates git tag "vX.Y.Z".
+#      5. Pushes commit & tag to main.
+#      6. Builds artifacts and creates a GitHub Release.
+#
+# 2. Tag-based Release (Manual Tagging)
+#    - How: run `git commit -m "..." && git tag v1.2.0 && git push origin v1.2.0` locally.
+#    - What it does:
+#      1. Detects the pushed tag (v1.2.0).
+#      2. SKIPS version calculation and bumping (assumes you already did it).
+#      3. Builds artifacts from that tag.
+#      4. Creates a GitHub Release for that tag.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 1.0.8) - leave empty to auto-increment patch version'
+        required: false
+        type: string
+      notes:
+        description: 'Release notes (optional)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  # Job 1: Calculate & Bump Version (Only runs on manual trigger)
+  bump-version:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.next_version.outputs.version }}
+      tag_name: ${{ steps.tag.outputs.name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Calculate next version
+        id: next_version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+            echo "Using manual version: ${{ inputs.version }}"
+          else
+            CURRENT=$(node -e "console.log(require('./package.json').version)")
+            echo "Current version: ${CURRENT}"
+            
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+            PATCH=$((PATCH + 1))
+            
+            # Simple carry logic
+            if [ $PATCH -ge 10 ]; then
+              MINOR=$((MINOR + 1))
+              PATCH=0
+            fi
+            if [ $MINOR -ge 10 ]; then
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+            fi
+            
+            NEXT="${MAJOR}.${MINOR}.${PATCH}"
+            echo "version=${NEXT}" >> $GITHUB_OUTPUT
+            echo "Auto-calculated next version: ${NEXT}"
+          fi
+
+      - name: Compute tag name
+        id: tag
+        run: echo "name=v${{ steps.next_version.outputs.version }}" >> $GITHUB_OUTPUT
+
+      - name: Update files, commit and push
+        env:
+          VERSION: ${{ steps.next_version.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Bumping to version ${VERSION}"
+
+          # Update package.json and manifest.json
+          node -e "const fs=require('fs');const v=process.env.VERSION;const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version=v;fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');const m=JSON.parse(fs.readFileSync('manifest.json','utf8'));m.version=v;fs.writeFileSync('manifest.json',JSON.stringify(m,null,2)+'\n');"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add package.json manifest.json
+          git commit -m "chore(release): v${VERSION}" || echo "No changes to commit"
+          git tag v${VERSION} || echo "Tag exists"
+
+          # Push commit and tag
+          git push origin HEAD:main --tags
+
+  # Job 2: Build & Release (Runs on both manual and tag push)
+  build-and-release:
+    needs: bump-version
+    if: always() && (needs.bump-version.result == 'success' || github.event_name == 'push')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Release Tag Variable
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "tag_name=${{ needs.bump-version.outputs.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.vars.outputs.tag_name }}
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 'latest'
+
+      - name: Install deps
+        run: bun i
+
+      - name: Build All
+        run: bun run build:all
+
+      - name: Archive artifacts
+        run: |
+          TAG=${{ steps.vars.outputs.tag_name }}
+
+          cd dist_chrome && zip -r ../gemini-voyager-chrome-${TAG}.zip . && cd ..
+
+      - name: Sign Firefox Extension and Submit to AMO
+        run: |
+          TAG=${{ steps.vars.outputs.tag_name }}
+          npx web-ext sign \
+            --source-dir=dist_firefox \
+            --api-key=${{ secrets.AMO_JWT_ISSUER }} \
+            --api-secret=${{ secrets.AMO_JWT_SECRET }} \
+            --channel=listed
+          # Move signed XPI to root with proper naming
+          mv web-ext-artifacts/*.xpi gemini-voyager-firefox-${TAG}.xpi
+
+      - name: Prepare Release Notes
+        id: release_body
+        run: |
+          TAG=${{ steps.vars.outputs.tag_name }}
+          NOTES="${{ inputs.notes }}"
+
+          if [ -n "$NOTES" ]; then
+            echo "body<<EOF" >> $GITHUB_OUTPUT
+            echo "$NOTES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            cat > release_body.md << EOF
+          ## 📥 Installation
+
+          <div align="center">
+            <a href="https://chromewebstore.google.com/detail/kjdpnimcnfinmilocccippmododhceol?utm_source=github&utm_medium=readme&utm_campaign=organic_growth&utm_content=en" target="_blank">
+              <img src="https://img.shields.io/badge/Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Web Store" height="36">
+            </a>
+            &nbsp;&nbsp;
+            <a href="https://microsoftedge.microsoft.com/addons/detail/gemini-voyager/gibmkggjijalcjinbdhcpklodjkhhlne" target="_blank">
+              <img src="https://img.shields.io/badge/Microsoft%20Edge-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="Microsoft Edge Add-ons" height="36">
+            </a>
+            &nbsp;&nbsp;
+            <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
+              <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
+            </a>
+          </div>
+
+          - **Chrome**: \`gemini-voyager-chrome-${TAG}.zip\`
+          - **Firefox**: \`gemini-voyager-firefox-${TAG}.xpi\`
+          - **Safari**: \`gemini-voyager-safari-${TAG}.zip\`
+          > **Safari 插件商店版本即将到来！**
+          > **Safari Extension Store Version is coming soon!**
+
+          ### 🍎 Safari 安装与限制 (Safari Installation & Limitations)
+
+          - **安装 (Installation)**: 直接解压 ZIP 文件，将解压的 \`.app\` 拖动到 **Applications (应用程序)** 目录即可永久安装。
+            Extract the ZIP file and drag the \`.app\` to the **Applications** folder for permanent installation.
+          - **限制 (Limitations)**: 受限于 Safari 特性，以下功能暂不支持：(a) Nano Banana 水印去除 (b) 图片导出 (建议使用 PDF 导出)。
+            Due to Safari's nature, the following features are not supported: (a) Watermark removal (b) Image export (PDF recommended).
+          EOF
+            echo "body<<EOF" >> $GITHUB_OUTPUT
+            cat release_body.md >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Gemini Voyager ${{ steps.vars.outputs.tag_name }}
+          tag_name: ${{ steps.vars.outputs.tag_name }}
+          files: |
+            gemini-voyager-chrome-*.zip
+            gemini-voyager-firefox-*.xpi
+            gemini-voyager-safari-*.zip
+          body: ${{ steps.release_body.outputs.body }}
+          generate_release_notes: true
+          append_body: ${{ inputs.notes == '' }}

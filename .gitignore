@@ -1,0 +1,68 @@
+node_modules/
+/dist_chrome/
+/dist_firefox/
+/dist_safari/
+gemini-voyager-edge-*.zip
+
+# Vitest
+coverage/
+.vitest/
+
+# Generated Xcode projects (users generate these locally)
+/Gemini Voyager/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+safari/Models/Gemini*
+
+.git-commit-message.txt
+
+package-lock.json
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+.vscode/
+.idea/
+.claude/
+.DS_Store
+
+*.local
+.env*
+
+*.mov
+*.mp4
+!docs/public/assets/*.mov
+!docs/public/assets/*.mp4
+*.xpi
+*.srt
+
+
+# VitePress
+docs/.vitepress/dist
+docs/.vitepress/cache
+
+# Sync Service (Commercial - Private)
+SYNC_SERVICE_ARCHITECTURE.md
+.env.sync
+.chrome-dev-data/
+
+# Dev Tools
+scripts/chrome-profile/
+
+# Git worktrees (local dev only)
+.worktrees/
+
+# Local agent outputs
+.agent/
+docs/plans/
+output/
+src/pages/content/printBridge/
+
+gemini-voyager-formal/
+
+# Electron Desktop Build
+/electron/extension/
+/electron/node_modules/
+/dist_electron/
